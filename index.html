@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schede di Matematica — Quarta Elementare</title>
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-muted: #6b6b6b;
+    --ink-faint: #c2c2c2;
+    --surface: #fafaf8;
+    --surface-alt: #f2f0eb;
+    --accent: #2a52be;
+    --accent-soft: #eef1fb;
+    --border: #e0ddd6;
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;
+    background: var(--surface-alt);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 320px; min-width: 320px;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    height: 100vh; position: sticky; top: 0;
+    overflow-y: auto;
+  }
+  .sidebar-header { padding: 22px 20px 14px; border-bottom: 1px solid var(--border); }
+  .sidebar-header h1 {
+    font-size: 14px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--ink);
+    font-family: 'Arial Narrow',Arial,sans-serif;
+  }
+  .sidebar-header p {
+    font-size: 11px; color: var(--ink-muted); margin-top: 3px;
+    font-family: Arial,sans-serif; font-style: italic;
+  }
+  .sidebar-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .sidebar-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-muted);
+    font-family: Arial,sans-serif; margin-bottom: 9px; display: block;
+  }
+
+  /* global difficulty */
+  .difficulty-group { display: flex; gap: 5px; }
+  .diff-btn {
+    flex: 1; padding: 6px 4px;
+    border: 1px solid var(--border); background: transparent;
+    border-radius: var(--radius); font-size: 11.5px;
+    font-family: Arial,sans-serif; cursor: pointer;
+    color: var(--ink-muted); transition: all .15s; text-align: center;
+  }
+  .diff-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .diff-btn.active { background: var(--accent); border-color: var(--accent); color:#fff; font-weight:600; }
+
+  .apply-row {
+    margin-top: 8px; display: flex; align-items: center;
+    gap: 6px; font-size: 10.5px; color: var(--ink-muted); font-family: Arial,sans-serif;
+  }
+  .apply-all-btn {
+    font-size: 10.5px; color: var(--accent); background: none; border: none;
+    cursor: pointer; font-family: Arial,sans-serif;
+    text-decoration: underline; text-underline-offset: 2px; padding:0;
+  }
+
+  /* topics list */
+  .topics-list { display: flex; flex-direction: column; gap: 3px; }
+  .topic-row {
+    border-radius: var(--radius); border: 1px solid transparent;
+    transition: border-color .12s, background .12s; overflow: hidden;
+  }
+  .topic-row.selected { border-color: var(--border); background: var(--accent-soft); }
+
+  .topic-main {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 8px; cursor: pointer; user-select: none;
+  }
+  .topic-main:hover { background: rgba(0,0,0,.03); }
+
+  .topic-check {
+    width: 15px; height: 15px; border: 1.5px solid var(--ink-faint);
+    border-radius: 3px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: all .12s;
+  }
+  .topic-row.selected .topic-check { background: var(--accent); border-color: var(--accent); }
+  .topic-check::after {
+    content: ''; width: 7px; height: 4px;
+    border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff;
+    transform: rotate(-45deg) translateY(-1px); opacity: 0; transition: opacity .12s;
+  }
+  .topic-row.selected .topic-check::after { opacity: 1; }
+
+  .topic-name {
+    font-size: 12px; font-family: Arial,sans-serif;
+    color: var(--ink); flex: 1; line-height: 1.3;
+  }
+
+  /* per-topic difficulty mini-pills */
+  .topic-diff-row {
+    display: none; padding: 0 8px 7px 31px; gap: 4px;
+  }
+  .topic-row.selected .topic-diff-row { display: flex; }
+
+  .tdiff-btn {
+    flex: 1; padding: 3px 2px; border: 1px solid var(--border);
+    background: #fff; border-radius: 4px; font-size: 10px;
+    font-family: Arial,sans-serif; cursor: pointer; color: var(--ink-muted);
+    transition: all .12s; text-align: center; white-space: nowrap;
+  }
+  .tdiff-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tdiff-btn.active-low  { background:#e8f5e9; border-color:#a5d6a7; color:#2d6a4f; font-weight:700; }
+  .tdiff-btn.active-mid  { background:#fff8e1; border-color:#ffe082; color:#7c5c00; font-weight:700; }
+  .tdiff-btn.active-high { background:#fce4ec; border-color:#f48fb1; color:#9b2335; font-weight:700; }
+
+  .select-all-btn {
+    font-size: 10.5px; color: var(--accent); background: none; border: none;
+    cursor: pointer; font-family: Arial,sans-serif; padding: 0;
+    margin-bottom: 8px; display: block;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+
+  /* actions */
+  .counter-badge {
+    font-size: 10.5px; font-family: Arial,sans-serif;
+    color: var(--ink-muted); text-align: center; margin-bottom: 10px;
+    min-height: 16px;
+  }
+  .counter-badge b { color: var(--ink); }
+
+  .generate-btn {
+    width: 100%; padding: 11px; background: var(--ink); color: #fff;
+    border: none; border-radius: var(--radius); font-size: 13px;
+    font-family: Arial,sans-serif; font-weight: 600; letter-spacing: .04em;
+    cursor: pointer; transition: background .15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .generate-btn:hover { background: #333; }
+
+  .pdf-btn {
+    width: 100%; padding: 9px; background: transparent; color: var(--ink);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 12px; font-family: Arial,sans-serif; cursor: pointer;
+    margin-top: 7px; transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .pdf-btn:hover { border-color: var(--ink); }
+  .pdf-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* MAIN */
+  .main { flex: 1; overflow-y: auto; padding: 32px; }
+
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%; min-height: 400px;
+    color: var(--ink-faint); gap: 12px; font-family: Arial,sans-serif;
+  }
+  .empty-state i { font-size: 44px; }
+  .empty-state p { font-size: 14px; }
+
+  /* worksheet */
+  .worksheet { max-width: 740px; margin: 0 auto; }
+
+  .sheet-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 28px; padding-bottom: 18px; border-bottom: 2px solid var(--ink);
+  }
+  .sheet-meta h2 {
+    font-size: 21px; font-weight: 700;
+    font-family: 'Arial Narrow',Arial,sans-serif;
+  }
+  .sheet-meta p { font-size: 12px; color: var(--ink-muted); margin-top: 4px; font-family: Arial,sans-serif; }
+  .sheet-info-fields { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .info-line {
+    font-size: 12px; font-family: Arial,sans-serif;
+    color: var(--ink-muted); display: flex; align-items: center; gap: 6px;
+  }
+  .info-line span {
+    display: inline-block; width: 100px;
+    border-bottom: 1px solid var(--ink-faint); height: 14px;
+  }
+
+  /* topic section */
+  .topic-section {
+    margin-bottom: 26px; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; box-shadow: var(--shadow);
+  }
+  .topic-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+  }
+  .topic-section-header h3 {
+    font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; font-family: 'Arial Narrow',Arial,sans-serif;
+    color: var(--ink); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .regen-btn {
+    padding: 4px 10px; background: transparent; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 11px; font-family: Arial,sans-serif;
+    color: var(--ink-muted); cursor: pointer; transition: all .12s;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .regen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .ex-count-info {
+    font-size: 10px; color: var(--ink-muted);
+    font-family: Arial,sans-serif; font-style: italic;
+    padding: 5px 16px 2px;
+  }
+
+  .exercises-grid { padding: 12px; display: flex; flex-direction: column; gap: 7px; }
+
+  .exercise {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 11px; background: var(--surface);
+    border-radius: 5px; border: 1px solid var(--border); min-height: 42px;
+  }
+  .ex-num {
+    font-size: 10px; font-weight: 700; color: var(--ink-faint);
+    font-family: Arial,sans-serif; min-width: 20px; padding-top: 2px; flex-shrink: 0;
+  }
+  .ex-content { font-size: 13px; line-height: 1.5; flex: 1; font-family: Arial,sans-serif; color: var(--ink); }
+
+  .diff-badge {
+    display: inline-flex; align-items: center; padding: 2px 7px;
+    border-radius: 12px; font-size: 9.5px; font-family: Arial,sans-serif;
+    font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  }
+  .diff-badge.low  { background:#e8f5e9; color:#2d6a4f; }
+  .diff-badge.mid  { background:#fff8e1; color:#7c5c00; }
+  .diff-badge.high { background:#fce4ec; color:#9b2335; }
+
+  .problem-text {
+    font-family: Arial,sans-serif; font-size: 13px;
+    font-style: italic; color: var(--ink); line-height: 1.55;
+  }
+  .answer-area {
+    margin-top: 6px; width: 100%;
+    border-bottom: 1px solid var(--ink-faint); height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Schede di Matematica</h1>
+    <p>Quarta Elementare</p>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Difficoltà predefinita</span>
+    <div class="difficulty-group">
+      <button class="diff-btn active" data-diff="low">Basso</button>
+      <button class="diff-btn" data-diff="mid">Medio</button>
+      <button class="diff-btn" data-diff="high">Avanzato</button>
+    </div>
+    <div class="apply-row">
+      <span>Applica a tutti gli argomenti:</span>
+      <button class="apply-all-btn" id="applyAllBtn">Applica</button>
+    </div>
+  </div>
+
+  <div class="sidebar-section" style="flex:1;padding-bottom:20px">
+    <span class="sidebar-label">Argomenti &amp; livello individuale</span>
+    <button class="select-all-btn" id="selectAllBtn">Seleziona tutti</button>
+    <div class="topics-list" id="topicsList"></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="counter-badge" id="counterBadge">Nessun argomento selezionato</div>
+    <button class="generate-btn" id="generateBtn">
+      <i class="ri-file-list-3-line"></i> Genera scheda
+    </button>
+    <button class="pdf-btn" id="pdfBtn" disabled>
+      <i class="ri-download-2-line"></i> Scarica PDF
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="empty-state" id="emptyState">
+    <i class="ri-book-2-line"></i>
+    <p>Scegli gli argomenti e genera la scheda</p>
+  </div>
+  <div class="worksheet" id="worksheet" style="display:none"></div>
+</main>
+
+<script>
+const TOPICS = [
+  { id:'numeri',          name:'Numeri fino al milione' },
+  { id:'addizioni',       name:'Addizioni e sottrazioni' },
+  { id:'moltiplicazioni', name:'Moltiplicazioni' },
+  { id:'divisioni',       name:'Divisioni' },
+  { id:'frazioni',        name:'Frazioni' },
+  { id:'decimali',        name:'Numeri decimali' },
+  { id:'geometria',       name:'Geometria piana' },
+  { id:'misure',          name:'Misure e unità' },
+  { id:'problemi',        name:'Problemi aritmetici' },
+  { id:'proprieta',       name:'Proprietà delle operazioni' },
+  { id:'logica',          name:'Logica e insiemi' },
+  { id:'dati',            name:'Dati e probabilità' },
+];
+
+const DIFF_LABELS = { low:'Basso', mid:'Medio', high:'Avanzato' };
+const MIN_TOTAL = 20;
+const BASE_COUNT = { low:6, mid:5, high:4 };
+
+let globalDiff = 'low';
+const topicDiffs = {};
+const selectedTopics = new Set();
+TOPICS.forEach(t => topicDiffs[t.id] = 'low');
+
+// random
+let _s = 1;
+function sr(min, max) {
+  _s = (_s * 1664525 + 1013904223) >>> 0;
+  return min + (_s % (max - min + 1));
+}
+function resetRand() { _s = (Date.now() * Math.random() * 99999) >>> 0 || 1; }
+
+// ── COMPUTE EXERCISE COUNT ──
+// ensures total >= MIN_TOTAL; distributes evenly but respects each topic's base count
+function computeCount(topicId, allSelected) {
+  const diff = topicDiffs[topicId];
+  const base = BASE_COUNT[diff];
+  if (allSelected.size === 0) return base;
+  // minimum needed per topic so sum >= MIN_TOTAL
+  const minPerTopic = Math.ceil(MIN_TOTAL / allSelected.size);
+  return Math.max(base, minPerTopic);
+}
+
+// ── GENERATORS ──
+
+function genNumeri(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    const t = sr(0,3);
+    let q;
+    if (diff === 'low') {
+      const n = sr(1000,99999);
+      const pos = ['migliaia','centinaia','decine di migliaia','decine','unità'];
+      if (t===0) q=`Qual è il valore delle <b>${pos[sr(0,4)]}</b> in <b>${n.toLocaleString('it')}</b>?`;
+      else if (t===1) q=`Scomponi: <b>${n.toLocaleString('it')}</b> = ___+___+___+___+___`;
+      else if (t===2) { const n2=sr(1000,99999); q=`Confronta con &lt; &gt; =: <b>${n.toLocaleString('it')}</b> ⬜ <b>${n2.toLocaleString('it')}</b>`; }
+      else q=`Predecessore e successore di <b>${n.toLocaleString('it')}</b>: ___ , ${n.toLocaleString('it')} , ___`;
+    } else if (diff === 'mid') {
+      const n = sr(100000,999999);
+      if (t===0) q=`Scomponi: <b>${n.toLocaleString('it')}</b> = ___migliaia + ___centinaia + ___decine + ___unità`;
+      else if (t===1) { const ns=[sr(100000,999999),sr(100000,999999),sr(100000,999999)]; q=`Ordina dal minore al maggiore: ${ns.map(x=>x.toLocaleString('it')).join(' — ')}`; }
+      else if (t===2) { const to=[1000,10000][sr(0,1)]; q=`Arrotonda <b>${n.toLocaleString('it')}</b> al ${to.toLocaleString('it')} più vicino: ___`; }
+      else q=`Predecessore e successore di <b>${n.toLocaleString('it')}</b>: ___ , ${n.toLocaleString('it')} , ___`;
+    } else {
+      const n = sr(500000,9999999);
+      const pos=['milioni','centinaia di migliaia','decine di migliaia','migliaia','centinaia','decine','unità'];
+      if (t===0) q=`Valore delle <b>${pos[sr(0,6)]}</b> in <b>${n.toLocaleString('it')}</b>: ___`;
+      else if (t===1) { const to=[1000,10000,100000][sr(0,2)]; q=`Arrotonda <b>${n.toLocaleString('it')}</b> al ${to.toLocaleString('it')} più vicino: ___`; }
+      else if (t===2) { const ws=['duecentocinquantamila trecentosessantuno','un milione quattrocentoventiduemila cinquantasei','trecentottomila seicentonovantanove','sette milioni ottantamila venti']; q=`Scrivi in cifre: <i>${ws[sr(0,3)]}</i> = ___`; }
+      else { const ns=[sr(1000000,9999999),sr(1000000,9999999),sr(1000000,9999999)]; q=`Ordina dal maggiore al minore: ${ns.map(x=>x.toLocaleString('it')).join(' — ')}`; }
+    }
+    ex.push({ text: q });
+  }
+  return ex;
+}
+
+function genAddizioni(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let a,b,c,op,txt;
+    const t = sr(0,2);
+    if (diff === 'low') {
+      a=sr(100,9999); b=sr(100,9999); op=sr(0,1)?'+':'-';
+      if(op==='-'&&b>a)[a,b]=[b,a];
+      const res=op==='+'?a+b:a-b;
+      txt=t===0?`${a.toLocaleString('it')} ${op} ${b.toLocaleString('it')} = ___`
+         :t===1?`___ ${op} ${b.toLocaleString('it')} = ${res.toLocaleString('it')}`
+         :`${a.toLocaleString('it')} ${op} ___ = ${res.toLocaleString('it')}`;
+    } else if (diff === 'mid') {
+      a=sr(10000,99999); b=sr(10000,99999); c=sr(1000,9999); op=sr(0,1)?'+':'-';
+      if(op==='-'&&b>a)[a,b]=[b,a];
+      const op2=sr(0,1)?'+':'-'; const res=op==='+'?a+b:a-b;
+      txt=t===0?`${a.toLocaleString('it')} ${op} ${b.toLocaleString('it')} ${op2} ${c.toLocaleString('it')} = ___`
+         :t===1?`___ ${op} ${b.toLocaleString('it')} = ${res.toLocaleString('it')}`
+         :`${a.toLocaleString('it')} ${op} ___ = ${res.toLocaleString('it')}`;
+    } else {
+      a=sr(100000,999999); b=sr(100000,999999); op=sr(0,1)?'+':'-';
+      if(op==='-'&&b>a)[a,b]=[b,a];
+      const res=op==='+'?a+b:a-b;
+      txt=t===0?`${a.toLocaleString('it')} ${op} ${b.toLocaleString('it')} = ___`
+         :t===1?`___ ${op} ${b.toLocaleString('it')} = ${res.toLocaleString('it')}`
+         :`${a.toLocaleString('it')} ${op} ___ = ${res.toLocaleString('it')}`;
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genMoltiplicazioni(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let a,b,txt; const t=sr(0,2);
+    if (diff==='low') { a=sr(11,99); b=sr(2,9); }
+    else if (diff==='mid') { a=sr(100,999); b=sr(11,29); }
+    else { a=sr(1000,9999); b=sr(11,49); }
+    const res=a*b;
+    txt=t===0?`${a.toLocaleString('it')} × ${b} = ___`
+       :t===1?`___ × ${b} = ${res.toLocaleString('it')}`
+       :`${a.toLocaleString('it')} × ___ = ${res.toLocaleString('it')}`;
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genDivisioni(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let b,q,r,txt; const t=sr(0,1);
+    if (diff==='low') { b=sr(2,9); q=sr(10,99); r=sr(0,b-1); }
+    else if (diff==='mid') { b=sr(2,9); q=sr(100,999); r=sr(0,b-1); }
+    else { b=sr(11,19); q=sr(100,999); r=sr(0,b-1); }
+    const d=b*q+r;
+    txt=t===0?`${d.toLocaleString('it')} ÷ ${b} = ___ r ___`
+       :`___ ÷ ${b} = ${q} r ${r}`;
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genFrazioni(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const den=sr(2,8), num=sr(1,den);
+      const ts=[
+        `Qual è la frazione: ${num} parti colorate su ${den} in totale? = ___/___`,
+        `${num}/${den} è propria, impropria o apparente? ___`,
+        `Scrivi la frazione complementare di ${num}/${den}: ___`,
+        `Confronta: ${sr(1,den)}/${den} ⬜ ${sr(1,den)}/${den}`,
+      ];
+      txt=ts[sr(0,3)];
+    } else if (diff==='mid') {
+      const den=sr(3,12), n1=sr(1,den-1), n2=sr(1,den-1);
+      const ts=[
+        `Riduci ai minimi termini: ${sr(2,4)*den}/${sr(2,4)*den+sr(1,den)} → ___/___`,
+        `${n1}/${den} + ${n2}/${den} = ___`,
+        `${Math.max(n1,n2)+1}/${den} − ${Math.min(n1,n2)}/${den} = ___`,
+        `Quale numero è ${n1}/${den} di ${sr(12,60)}? ___`,
+      ];
+      txt=ts[sr(0,3)];
+    } else {
+      const d1=sr(3,6), d2=sr(3,6), n1=sr(1,d1-1), n2=sr(1,d2-1);
+      const ts=[
+        `Riduci allo stesso denominatore e confronta: ${n1}/${d1} ⬜ ${n2}/${d2}`,
+        `${n1}/${d1} + ${n2}/${d2} = ___`,
+        `${sr(2,5)} interi e ${sr(1,d1-1)}/${d1} → scrivi come frazione impropria: ___`,
+        `Quale numero è ${n1}/${d1} di ${sr(24,120)}? ___`,
+      ];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genDecimali(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const a=(sr(10,999)/10).toFixed(1), b=(sr(10,999)/10).toFixed(1);
+      const ts=[`${a} + ${b} = ___`,`${Math.max(+a,+b).toFixed(1)} − ${Math.min(+a,+b).toFixed(1)} = ___`,`Ordina crescente: ${(sr(10,99)/10).toFixed(1)}, ${(sr(10,99)/10).toFixed(1)}, ${(sr(10,99)/10).toFixed(1)}`];
+      txt=ts[sr(0,2)];
+    } else if (diff==='mid') {
+      const a=(sr(100,9999)/100).toFixed(2), b=(sr(100,9999)/100).toFixed(2);
+      const ts=[`${a} + ${b} = ___`,`${Math.max(+a,+b).toFixed(2)} − ${Math.min(+a,+b).toFixed(2)} = ___`,`${a} × ${sr(2,9)} = ___`,`Arrotonda ${a} al decimo: ___`];
+      txt=ts[sr(0,3)];
+    } else {
+      const a=(sr(1000,99999)/1000).toFixed(3);
+      const ts=[`${a} × ${sr(2,9)} = ___`,`${a} ÷ ${sr(2,5)} ≈ ___`,`Converti: ${a} = ___/1000`,`Quale cifra è nei millesimi di ${a}? ___`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genGeometria(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const l=sr(3,15), h=sr(2,12);
+      const ts=[`Perimetro del quadrato lato ${l} cm = ___`,`Perimetro rettangolo b=${l} cm, h=${h} cm = ___`,`Area rettangolo b=${l} cm, h=${h} cm = ___ cm²`,`Quanti lati ha un ${['triangolo','quadrato','pentagono','esagono'][sr(0,3)]}? ___`];
+      txt=ts[sr(0,3)];
+    } else if (diff==='mid') {
+      const b=sr(5,20), h=sr(3,15);
+      const ts=[`Area triangolo b=${b} cm, h=${h} cm → (b×h)÷2 = ___`,`Area quadrato lato ${sr(4,20)} cm = ___`,`Perimetro triangolo equilatero lato ${sr(3,12)} cm = ___`,`Area rombo d₁=${sr(6,20)} cm, d₂=${sr(4,16)} cm = ___`];
+      txt=ts[sr(0,3)];
+    } else {
+      const r=sr(3,12);
+      const ts=[`Diametro=${r*2} cm → raggio=___ | Circonferenza≈___ (π≈3,14)`,`Area cerchio r=${r} cm ≈ ___ cm² (π≈3,14)`,`Rettangolo: perimetro ${sr(20,60)} cm, base ${sr(5,20)} cm → altezza=___; area=___`,`Area trapezio B=${sr(10,20)} cm, b=${sr(4,9)} cm, h=${sr(5,14)} cm = ___`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genMisure(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const ts=[`${sr(1,50)} km = ___ m`,`${sr(100,9999)} cm = ___ m`,`${sr(1,20)} kg = ___ g`,`${sr(1,10)} L = ___ dL`];
+      txt=ts[sr(0,3)];
+    } else if (diff==='mid') {
+      const ts=[`${sr(1,5)} ore e ${sr(1,59)} min = ___ minuti`,`${sr(2000,9999)} m = ___ km e ___ m`,`${sr(1,10)} kg e ${sr(100,999)} g = ___ g`,`${sr(1,20)} daL = ___ L = ___ dL`];
+      txt=ts[sr(0,3)];
+    } else {
+      const ts=[`${sr(10,50)} dm² = ___ cm²`,`${sr(1,10)} m³ = ___ dm³`,`Ordina: ${sr(1,5)} km, ${sr(3000,7000)} m, ${sr(1,10)} dam`,`${sr(1,4)} settimane e ${sr(1,6)} giorni = ___ giorni`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genProblemi(diff, count) {
+  const T = {
+    low:[
+      ()=>{ const a=sr(12,80),b=sr(5,Math.min(40,a-1)); return `Marco ha ${a} figurine. Ne regala ${b}. Quante ne restano?`; },
+      ()=>{ const p=sr(2,8),c=sr(5,20); return `Una confezione contiene ${c} biscotti. Quanti ce ne sono in ${p} confezioni?`; },
+      ()=>{ const tot=sr(30,150),g=sr(2,6); return `${tot} bambini si dividono in ${g} squadre uguali. Quanti per squadra?`; },
+      ()=>{ const km=sr(5,25),v=sr(2,5); return `Un ciclista percorre ${km} km al giorno. Quanti km in ${v} giorni?`; },
+      ()=>{ const p=sr(100,500),sp=sr(10,80); return `Un oggetto costava €${p}. È scontato di €${sp}. Quanto costa ora?`; },
+      ()=>{ const a=sr(10,50),b=sr(5,a-1); return `Luca ha ${a} caramelle, Anna ne ha ${b}. Quante ne hanno in tutto? Quante in più ha Luca?`; },
+    ],
+    mid:[
+      ()=>{ const p=sr(5,12),c=sr(3,8),r=sr(10,40); return `Un negozio ha ${p} scatole con ${c} oggetti ciascuna e ${r} oggetti sfusi. Quanti oggetti in totale?`; },
+      ()=>{ const tot=sr(200,600),s=sr(3,7); return `Una confezione da ${tot} g si divide in ${s} porzioni uguali. Quanto pesa ciascuna e quanto avanza?`; },
+      ()=>{ const d=sr(5,20),kmh=sr(40,80); return `Un'auto va a ${kmh} km/h per ${d} minuti. Quanti km percorre?`; },
+      ()=>{ const g=sr(3,6),q=sr(4,10),pr=sr(2,8); return `${g} amici comprano ${q} fumetti a €${pr} l'uno e dividono il costo. Quanto paga ciascuno?`; },
+      ()=>{ const a=sr(200,600),e=sr(50,150),v=sr(30,120); return `Una libreria ha ${a} libri. Ne arrivano ${e} e ne vengono venduti ${v}. Quanti restano?`; },
+    ],
+    high:[
+      ()=>{ const t=sr(400,1200),fill=sr(10,20),empty=sr(3,9); return `Una vasca da ${t} litri si riempie a ${fill} L/min e si svuota a ${empty} L/min. In quanti minuti si svuoterà?`; },
+      ()=>{ const a=sr(8,20),b=sr(4,a-2); return `Un rettangolo ha perimetro ${(a+b)*2} cm e base ${a} cm. Trova l'altezza e l'area.`; },
+      ()=>{ const g=sr(3,7),km=sr(5,15),days=sr(3,7); return `${g} amici percorrono ${km} km/giorno per ${days} giorni. Quanti km in totale?`; },
+      ()=>{ const tot=sr(400,1200),r=sr(5,20); return `Un negozio aveva ${tot} articoli. Ne ha venduto il ${r}%. Quanti ne restano?`; },
+      ()=>{ const p1=sr(3,8),p2=sr(3,8); return `Lucia impiega ${p1} min per leggere una pagina. Se legge ${sr(10,30)} pagine al giorno, in quanti giorni legge un libro da ${sr(60,200)} pagine?`; },
+    ]
+  };
+  const ex = [];
+  const list = T[diff];
+  for (let i = 0; i < count; i++) {
+    ex.push({ text: list[sr(0,list.length-1)](), isProblem:true });
+  }
+  return ex;
+}
+
+function genProprieta(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const a=sr(10,99),b=sr(10,99),c=sr(2,15);
+      const ts=[`Prop. commutativa: ${a}+${b} = ${b}+___`,`Prop. associativa: (${a}+${b})+${c} = ${a}+(___+___)`,`Prop. commutativa: ${a}×${b} = ${b}×___`,`Elemento neutro: ${sr(100,999)}×___ = ${sr(100,999)}`];
+      txt=ts[sr(0,3)];
+    } else if (diff==='mid') {
+      const a=sr(10,50),b=sr(5,20),c=sr(2,10);
+      const ts=[`Prop. distributiva: ${a}×(${b}+${c}) = (${a}×___) + (${a}×___)`,`Prop. dissociativa: ${a}×${b*c} = ${a}×___×___`,`Verifica: (${a}+${b})×${c} = ${a}×${c}+${b}×${c} → ___=___`,`Calcola rapidamente: ${sr(10,25)}×${sr(2,5)}×${sr(2,5)}`];
+      txt=ts[sr(0,3)];
+    } else {
+      const a=sr(20,50);
+      const ts=[`Calcola in modo rapido: ${a}×99 = ${a}×(___−___) = ___`,`Dimostra: ${a}×(${sr(5,15)}+${sr(3,12)}) = ___`,`Proprietà dello zero: ___ ÷ ${sr(2,9)} = 0`,`Inversa moltiplicazione: ${sr(50,200)} ÷ ${sr(2,9)} = ___×___`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genLogica(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const ts=[`Completa la serie: 3, 6, 9, 12, ___, ___`,`Completa la serie: 100, 90, 80, ___, ___`,`Cerchia i multipli di ${sr(3,7)}: 14, 21, 27, 35, 42, 56, 63`,`Indica i divisori di ${[12,18,24,30,36][sr(0,4)]}: ___`];
+      txt=ts[sr(0,3)];
+    } else if (diff==='mid') {
+      const ts=[`Multipli comuni di 4 e 6 fino a 60: ___`,`MCD di ${[12,18,24][sr(0,2)]} e ${[6,9,12][sr(0,2)]}: ___`,`mcm di ${[4,6,8][sr(0,2)]} e ${[3,5,9][sr(0,2)]}: ___`,`Verifica divisibilità per 9: ${sr(100,999)} (somma cifre=___, divisibile?___)`];
+      txt=ts[sr(0,3)];
+    } else {
+      const ts=[`Trova i numeri primi fino a ${[30,40,50][sr(0,2)]} con il crivello di Eratostene`,`Tre numeri che lasciano resto ${sr(1,5)} divisi per ${sr(3,8)}: ___`,`Completa: ___, ___, 40, ___, ___, 70 (incremento costante)`,`Due numeri con MCD=${[6,8,12][sr(0,2)]} e mcm=${[24,36,60][sr(0,2)]}: ___ e ___`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+function genDati(diff, count) {
+  const ex = [];
+  for (let i = 0; i < count; i++) {
+    let txt;
+    if (diff==='low') {
+      const v=Array.from({length:5},()=>sr(2,20));
+      const ts=[`Dati: {${v.join(', ')}} → valore più grande: ___ più piccolo: ___`,`Completa la tabella della frequenza e disegna il grafico a barre.`,`Osserva il grafico: quale categoria ha il valore maggiore? ___`];
+      txt=ts[sr(0,2)];
+    } else if (diff==='mid') {
+      const v=Array.from({length:6},()=>sr(5,30));
+      const ts=[`Calcola la media di: {${v.join(', ')}} → ___÷___ = ___`,`Moda e mediana di: {${[...v].sort((a,b)=>a-b).join(', ')}}`,`Lancio un dado: P(numero pari) = ___/___`];
+      txt=ts[sr(0,2)];
+    } else {
+      const ts=[`P(numero >4 su dado a 6 facce) = ___/___`,`Media, moda e mediana di: {${Array.from({length:8},()=>sr(10,50)).join(', ')}}`,`Settore "sport" è 25% su ${sr(40,200)} bambini → quanti praticano sport? ___`,`P(re) da mazzo di 40 carte = ___`];
+      txt=ts[sr(0,3)];
+    }
+    ex.push({ text: txt });
+  }
+  return ex;
+}
+
+const GENERATORS = {
+  numeri:genNumeri, addizioni:genAddizioni, moltiplicazioni:genMoltiplicazioni,
+  divisioni:genDivisioni, frazioni:genFrazioni, decimali:genDecimali,
+  geometria:genGeometria, misure:genMisure, problemi:genProblemi,
+  proprieta:genProprieta, logica:genLogica, dati:genDati,
+};
+
+// ── BUILD SIDEBAR ──
+function buildTopicsList() {
+  const list = document.getElementById('topicsList');
+  list.innerHTML = '';
+  TOPICS.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'topic-row' + (selectedTopics.has(t.id) ? ' selected' : '');
+    row.id = `row-${t.id}`;
+    const d = topicDiffs[t.id];
+    row.innerHTML = `
+      <div class="topic-main" data-id="${t.id}">
+        <div class="topic-check"></div>
+        <span class="topic-name">${t.name}</span>
+      </div>
+      <div class="topic-diff-row" id="tdiff-${t.id}">
+        <button class="tdiff-btn ${d==='low'?'active-low':''}" data-id="${t.id}" data-d="low">Basso</button>
+        <button class="tdiff-btn ${d==='mid'?'active-mid':''}" data-id="${t.id}" data-d="mid">Medio</button>
+        <button class="tdiff-btn ${d==='high'?'active-high':''}" data-id="${t.id}" data-d="high">Avanzato</button>
+      </div>`;
+
+    row.querySelector('.topic-main').addEventListener('click', () => {
+      if (selectedTopics.has(t.id)) selectedTopics.delete(t.id);
+      else selectedTopics.add(t.id);
+      row.classList.toggle('selected');
+      updateSelectAll();
+      updateCounter();
+    });
+
+    row.querySelectorAll('.tdiff-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id=btn.dataset.id, dv=btn.dataset.d;
+        topicDiffs[id]=dv;
+        document.getElementById(`tdiff-${id}`).querySelectorAll('.tdiff-btn').forEach(b => {
+          b.className=`tdiff-btn${b.dataset.d===dv?' active-'+dv:''}`;
+        });
+        updateCounter();
+      });
+    });
+
+    list.appendChild(row);
+  });
+}
+
+function updateSelectAll() {
+  document.getElementById('selectAllBtn').textContent =
+    selectedTopics.size===TOPICS.length ? 'Deseleziona tutti' : 'Seleziona tutti';
+}
+
+function updateCounter() {
+  const badge = document.getElementById('counterBadge');
+  const n = selectedTopics.size;
+  if (n===0) { badge.innerHTML='Nessun argomento selezionato'; return; }
+  const total = [...selectedTopics].reduce((acc,id)=>acc+computeCount(id,selectedTopics),0);
+  badge.innerHTML=`<b>${n}</b> argomento${n>1?'i':''} selezionato${n>1?'i':''} · <b>${total}</b> esercizi totali`;
+}
+
+// Global diff buttons
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    globalDiff = btn.dataset.diff;
+  });
+});
+
+document.getElementById('applyAllBtn').addEventListener('click', () => {
+  TOPICS.forEach(t => {
+    topicDiffs[t.id]=globalDiff;
+    const c=document.getElementById(`tdiff-${t.id}`);
+    if(c) c.querySelectorAll('.tdiff-btn').forEach(b=>{
+      b.className=`tdiff-btn${b.dataset.d===globalDiff?' active-'+globalDiff:''}`;
+    });
+  });
+  updateCounter();
+});
+
+document.getElementById('selectAllBtn').addEventListener('click', () => {
+  if(selectedTopics.size===TOPICS.length){
+    selectedTopics.clear();
+    document.querySelectorAll('.topic-row').forEach(r=>r.classList.remove('selected'));
+  } else {
+    TOPICS.forEach(t=>selectedTopics.add(t.id));
+    document.querySelectorAll('.topic-row').forEach(r=>r.classList.add('selected'));
+  }
+  updateSelectAll(); updateCounter();
+});
+
+// ── GENERATE ──
+let currentSheets = {};
+
+function generateTopicData(id) {
+  resetRand();
+  const diff=topicDiffs[id];
+  const count=computeCount(id, selectedTopics);
+  return { diff, exercises: GENERATORS[id](diff, count) };
+}
+
+function renderSection(id, data) {
+  const topic=TOPICS.find(t=>t.id===id);
+  const { diff, exercises } = data;
+  const badge=`<span class="diff-badge ${diff}">${DIFF_LABELS[diff]}</span>`;
+  let exHtml='';
+  if (id==='problemi') {
+    exercises.forEach((ex,i)=>{
+      exHtml+=`<div class="exercise" style="flex-direction:column;align-items:stretch;min-height:78px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span class="ex-num">${i+1}.</span>
+          <p class="problem-text">${ex.text}</p>
+        </div>
+        <div class="answer-area" style="margin-top:10px"></div>
+        <div class="answer-area" style="margin-top:4px"></div>
+      </div>`;
+    });
+  } else {
+    exercises.forEach((ex,i)=>{
+      exHtml+=`<div class="exercise">
+        <span class="ex-num">${i+1}.</span>
+        <div class="ex-content">${ex.text}</div>
+      </div>`;
+    });
+  }
+  return `<div class="topic-section" id="section-${id}">
+    <div class="topic-section-header">
+      <h3>${topic.name} ${badge}</h3>
+      <button class="regen-btn" onclick="regenTopic('${id}')">
+        <i class="ri-refresh-line"></i> Rigenera
+      </button>
+    </div>
+    <div class="ex-count-info">${exercises.length} esercizi</div>
+    <div class="exercises-grid">${exHtml}</div>
+  </div>`;
+}
+
+window.regenTopic = function(id) {
+  const btn=document.querySelector(`#section-${id} .regen-btn`);
+  if(!btn) return;
+  btn.innerHTML='<i class="ri-loader-4-line"></i> ...';
+  btn.disabled=true;
+  setTimeout(()=>{
+    currentSheets[id]=generateTopicData(id);
+    const sec=document.getElementById(`section-${id}`);
+    const tmp=document.createElement('div');
+    tmp.innerHTML=renderSection(id, currentSheets[id]);
+    sec.replaceWith(tmp.firstChild);
+  }, 80);
+};
+
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  if(selectedTopics.size===0){ alert('Seleziona almeno un argomento!'); return; }
+  currentSheets={};
+  selectedTopics.forEach(id=>{ currentSheets[id]=generateTopicData(id); });
+
+  const ws=document.getElementById('worksheet');
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('it-IT',{year:'numeric',month:'long',day:'numeric'});
+
+  const totalEx=[...selectedTopics].reduce((a,id)=>a+currentSheets[id].exercises.length,0);
+
+  let html=`<div class="sheet-header">
+    <div class="sheet-meta">
+      <h2>Scheda di Matematica</h2>
+      <p>Quarta Elementare &nbsp;·&nbsp; ${dateStr} &nbsp;·&nbsp; ${totalEx} esercizi totali</p>
+    </div>
+    <div class="sheet-info-fields">
+      <div class="info-line">Nome <span></span></div>
+      <div class="info-line">Data <span></span></div>
+      <div class="info-line">Voto <span></span></div>
+    </div>
+  </div>`;
+
+  TOPICS.forEach(t=>{ if(currentSheets[t.id]) html+=renderSection(t.id, currentSheets[t.id]); });
+
+  ws.innerHTML=html;
+  ws.style.display='block';
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('pdfBtn').disabled=false;
+});
+
+// ── PDF ──
+document.getElementById('pdfBtn').addEventListener('click', ()=>{
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const pw=210,ph=297,ml=15,mr=15,mt=15,mb=14,tw=pw-ml-mr;
+  let y=mt; const lh=6.2;
+
+  function chk(n=10){ if(y+n>ph-mb){doc.addPage();y=mt;} }
+
+  // Header
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.text('Scheda di Matematica — Quarta Elementare',ml,y); y+=7;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100);
+  const now=new Date();
+  doc.text(now.toLocaleDateString('it-IT',{year:'numeric',month:'long',day:'numeric'}),ml,y);
+  doc.text('Nome: ________________________',pw/2,y); y+=5;
+  doc.text('Data: ________________________',pw/2,y);
+  doc.setTextColor(0); y+=5;
+  doc.setDrawColor(30); doc.setLineWidth(0.6);
+  doc.line(ml,y,pw-mr,y); y+=8;
+
+  TOPICS.forEach(t=>{
+    if(!currentSheets[t.id]) return;
+    const { diff, exercises }=currentSheets[t.id];
+    const name=TOPICS.find(x=>x.id===t.id).name;
+    chk(20);
+    doc.setFillColor(242,240,235);
+    doc.rect(ml,y-4,tw,8,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(30);
+    doc.text(`${name.toUpperCase()}  [${DIFF_LABELS[diff].toUpperCase()}  · ${exercises.length} esercizi]`,ml+3,y+1);
+    y+=11;
+
+    exercises.forEach((ex,i)=>{
+      const isP=t.id==='problemi';
+      chk(isP?28:13);
+      doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(60);
+      doc.text(`${i+1}.`,ml+2,y);
+      const plain=ex.text.replace(/<[^>]*>/g,'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
+      const lines=doc.splitTextToSize(plain,tw-12);
+      doc.setFont('courier','normal'); doc.setFontSize(9.5); doc.setTextColor(20);
+      lines.forEach((line,li)=>doc.text(line,ml+10,y+li*lh));
+      y+=lines.length*lh;
+      if(isP){
+        doc.setDrawColor(200); doc.setLineWidth(0.3);
+        doc.line(ml+10,y+3,pw-mr,y+3);
+        doc.line(ml+10,y+10,pw-mr,y+10);
+        y+=16;
+      } else {
+        doc.setDrawColor(200); doc.setLineWidth(0.3);
+        doc.line(pw-mr-40,y+2,pw-mr,y+2); y+=8;
+      }
+    });
+    y+=5;
+  });
+
+  const pages=doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(150);
+    doc.text(`Pagina ${p} di ${pages}`,pw/2,ph-6,{align:'center'});
+  }
+  doc.save(`scheda_matematica_${Date.now()}.pdf`);
+});
+
+// Init
+buildTopicsList();
+updateCounter();
+</script>
+</body>
+</html>
